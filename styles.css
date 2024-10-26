@@ -560,7 +560,7 @@ a {
 
     .project-content {
         transform: scale(0.5);
-        /* Corrected scale property */
+        
         bottom: 0;
         left: 0;
         right: 0;
