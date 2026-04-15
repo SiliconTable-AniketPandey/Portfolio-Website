@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chest X-ray Imaging Report</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="X_ray_report.css">
+</head>
+<body class="bg-light">
+    <div class="container py-5">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="report-header d-flex justify-content-between align-items-start mb-4">
+                    <div>
+                        <h1 class="mb-2">Chest X-ray Imaging Report</h1>
+                        <p class="lead text-muted">Technical Report on Multi-class Classification of Thoracic Pathologies</p>
+                    </div>
+                    <button id="theme-toggle" class="theme-toggle-btn">🌙</button>
+                </div>
+                <article>
+                    <h4 id="1-introduction" class="mb-4 mt-5">1. Introduction</h4>
+                    <p class="text-muted lead"><strong>Chest X-ray imaging</strong> is one of the most widely used and cost-effective diagnostic tools for identifying thoracic abnormalities, including pulmonary infections, pleural conditions, and cardiovascular diseases. Despite its clinical importance, accurate interpretation of chest radiographs is challenging due to <em>subtle visual patterns</em>, variability in image quality, and increasing workload on radiologists. These challenges motivate the development of automated deep learning systems that can assist in reliable and scalable diagnosis.</p>
+                    <p class="text-muted">In this work, we address the task of classifying chest X-ray images into <strong>20 thoracic pathology categories</strong>, including a <strong>No Finding class</strong>. Although the dataset is provided in a <strong>one-hot encoded format</strong>, exploratory data analysis confirms that each image is associated with exactly one active label, establishing this as a <strong>multi-class classification problem</strong> rather than a <em>multi-label setting</em>. The dataset consists of over <strong>51,000 training images</strong> and <strong>17,000 test images</strong>, with all images having consistent spatial dimensions, enabling a stable and uniform preprocessing pipeline.</p>
+                    <p class="text-muted">A key challenge observed in the dataset is <strong>severe class imbalance</strong>. The <strong>No Finding class</strong> dominates the distribution with a significantly higher number of samples, while several pathological conditions are underrepresented, with some classes containing fewer than <strong>50 instances</strong>. Additionally, analysis of pixel intensity distributions reveals that most diagnostic information is concentrated in a narrow mid-gray range, making <strong>contrast and normalization critical</strong> for effective feature learning. The dataset also exhibits potential <em>spurious correlations</em> arising from variations in imaging conditions, which may lead models to learn non-clinical shortcuts if not handled carefully.</p>
+                    <p class="text-muted">Another important aspect of this problem is the <strong>asymmetric cost associated with prediction errors</strong>. In clinical practice, failing to detect a disease (<em>false negative</em>) is considerably more critical than incorrectly predicting its presence (<em>false positive</em>). This is reflected in the competition's evaluation metric, which imposes a substantially higher penalty on <strong>false negatives</strong>. Therefore, model development must prioritize <strong>sensitivity to pathological cases</strong> while maintaining balanced performance across all classes.</p>
+                    <p class="text-muted">The objective of this study is to develop a <strong>robust deep learning-based classification framework</strong> that effectively captures discriminative features from chest X-ray images while addressing <strong>class imbalance</strong> and minimizing high-cost errors. The proposed approach focuses on optimizing performance under the given asymmetric scoring function, ensuring that the model does not bias toward dominant classes and remains sensitive to rare but clinically significant conditions.</p>
+                    <hr class="my-5">
+
+                    <h4 id="2-methodology" class="mb-4 mt-5">2. Methodology</h4>
+                    <p class="text-muted">To address the chest X-ray classification task, a deep learning-based approach was adopted using <strong>convolutional neural networks with transfer learning</strong>. The primary model used in this work is <strong>ConvNeXt-Tiny</strong>, a modern convolutional architecture designed to incorporate design principles from transformer-based models while retaining the efficiency of CNNs. <strong>ConvNeXt</strong> was chosen due to its strong performance on image classification benchmarks and its ability to capture <strong>hierarchical visual features</strong>, which is particularly important for identifying <em>subtle patterns</em> in medical images.</p>
+                    <p class="text-muted">The model was initialized with <strong>ImageNet-pretrained weights</strong> and trained using a staged fine-tuning strategy, where the backbone was initially frozen to stabilize optimization and subsequently unfrozen to enable full adaptation to the target dataset.</p>
+
+                    <h5 id="2-1-data-preprocessing" class="mt-4 mb-3">2.1 Data Preprocessing</h5>
+                    <p class="text-muted">All images were resized to a fixed resolution (<strong>224×224 for Model A</strong> and <strong>256×256 for Model B</strong>) to ensure compatibility with the model architecture and to maintain computational efficiency. Since pretrained weights were used, <strong>ImageNet normalization</strong> was applied to align the input distribution with the pretraining domain.</p>
+                    <p class="text-muted">Given the nature of medical images, where important features are often <em>subtle intensity variations</em>, normalization plays a critical role in improving model sensitivity. Additionally, all images were converted from <strong>grayscale to three-channel format</strong> to match the expected input of pretrained models.</p>
+
+                    <h5 id="2-2-data-augmentation" class="mt-4 mb-3">2.2 Data Augmentation</h5>
+                    <p class="text-muted">To improve generalization and reduce overfitting, a set of controlled data augmentation techniques was applied using the <strong>Albumentations library</strong>. These augmentations were carefully chosen to preserve clinical relevance while introducing variability:</p>
+                    <ul class="text-muted">
+                        <li><strong>Horizontal flipping</strong> (to simulate anatomical variations)</li>
+                        <li><strong>ShiftScaleRotate</strong> (<em>small rotations, scaling, and translations</em>)</li>
+                        <li><strong>Brightness and contrast adjustments</strong></li>
+                    </ul>
+                    <p class="text-muted">Aggressive augmentations were avoided to prevent distortion of medically relevant features.</p>
+
+                    <h5 id="2-3-handling-class-imbalance" class="mt-4 mb-3">2.3 Handling Class Imbalance</h5>
+                    <p class="text-muted">The dataset exhibits <strong>significant class imbalance</strong>, with certain classes being heavily underrepresented. To address this, a <strong>WeightedRandomSampler</strong> was used during training to ensure that minority classes are sampled more frequently. This approach helps the model learn from rare classes without discarding valuable majority class data.</p>
+
+                    <h5 id="2-4-loss-function-and-optimization" class="mt-4 mb-3">2.4 Loss Function and Optimization</h5>
+                    <p class="text-muted">The model was trained using <strong>CrossEntropyLoss with label smoothing</strong>, which helps improve generalization and reduces overconfidence in predictions. The optimizer used was <strong>AdamW</strong>, which provides better regularization through decoupled weight decay. A learning rate scheduler (<strong>ReduceLROnPlateau</strong>) was employed to adapt the learning rate based on validation performance.</p>
+                    <p class="text-muted"><strong>Mixed precision training</strong> was utilized to improve computational efficiency and enable faster training on GPU hardware.</p>
+
+                    <h5 id="2-5-regularization-and-training-stability" class="mt-4 mb-3">2.5 Regularization and Training Stability</h5>
+                    <p class="text-muted">Several techniques were incorporated to stabilize training and prevent overfitting:</p>
+                    <ul class="text-muted">
+                        <li><strong>Dropout</strong> in the classification head</li>
+                        <li><strong>Gradient clipping</strong> to avoid exploding gradients</li>
+                        <li><strong>Early stopping</strong> based on validation score</li>
+                        <li><strong>Learning rate reduction on plateau</strong></li>
+                    </ul>
+
+                    <h5 id="2-6-inference-strategy" class="mt-4 mb-3">2.6 Inference Strategy</h5>
+                    <p class="text-muted">During inference, a strict <strong>multi-class prediction strategy</strong> was followed using <strong>softmax activation and argmax selection</strong> to ensure that exactly one class is predicted per image. To further improve performance, <strong>Test-Time Augmentation (TTA)</strong> was applied by averaging predictions from original and horizontally flipped images.</p>
+                    <p class="text-muted">Additionally, <strong>temperature scaling</strong> was used to calibrate prediction confidence before final class selection, which helps improve robustness under the competition's asymmetric scoring metric.</p>
+                    <hr class="my-5">
+
+                    <h4 id="3-experiments-and-results" class="mb-4 mt-5">3. Experiments and Results</h4>
+                    <p class="text-muted">To systematically improve model performance under the <strong>competition's asymmetric scoring metric</strong>, a series of controlled experiments were conducted. These experiments focused on optimizing <strong>model architecture</strong>, <strong>training dynamics</strong>, <strong>input resolution</strong>, and <strong>inference calibration</strong>. The objective was to identify configurations that improve <strong>sensitivity to minority classes</strong> while maintaining overall stability.</p>
+
+                    <h5 id="3-1-validation-strategy" class="mt-4 mb-3">3.1 Validation Strategy</h5>
+                    <p class="text-muted">The dataset was split into training and validation sets using an <strong>80:20 stratified split</strong>, ensuring that <strong>class distribution was preserved</strong> across both sets. This was particularly important due to the <strong>severe class imbalance</strong> observed in the dataset.</p>
+                    <p class="text-muted">Model performance was evaluated using:</p>
+                    <ul class="text-muted">
+                        <li><strong>Competition Score (primary metric)</strong></li>
+                        <li><strong>Macro F1-score</strong></li>
+                        <li><strong>Validation Loss</strong></li>
+                    </ul>
+                    <p class="text-muted">The <strong>competition score</strong> was used as the main criterion for:</p>
+                    <ul class="text-muted">
+                        <li><strong>Model selection</strong></li>
+                        <li><strong>Learning rate scheduling</strong></li>
+                        <li><strong>Early stopping</strong></li>
+                    </ul>
+
+                    <h5 id="3-2-experimental-setup-and-parameter-exploration" class="mt-4 mb-3">3.2 Experimental Setup and Parameter Exploration</h5>
+                    <p class="text-muted">A series of experiments were conducted by varying <strong>key hyperparameters</strong> and <strong>training strategies</strong>. The exploration focused on identifying <strong>stable and performant configurations</strong>.</p>
+
+                    <p class="text-muted"><strong>Learning Rate Exploration</strong></p>
+                    <table class="table table-sm table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Learning Rate</th>
+                                <th>Observation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>3e-4</td>
+                                <td>Unstable training, poor convergence</td>
+                            </tr>
+                            <tr>
+                                <td>1e-4</td>
+                                <td>Moderate performance</td>
+                            </tr>
+                            <tr>
+                                <td>8e-5</td>
+                                <td>Stable training, best baseline (Model A)</td>
+                            </tr>
+                            <tr>
+                                <td>5e-5</td>
+                                <td>Improved fine-tuning stability (Model B)</td>
+                            </tr>
+                            <tr>
+                                <td>&lt;1e-5</td>
+                                <td>Very slow convergence</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p class="text-muted fst-italic"><strong>Insight:</strong> ConvNeXt demonstrated optimal performance in the range of 5e-5 to 1e-4, balancing convergence speed and stability.</p>
+
+                    <p class="text-muted mt-4"><strong>Input Resolution Study</strong></p>
+                    <table class="table table-sm table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Image Size</th>
+                                <th>Training Speed</th>
+                                <th>Performance</th>
+                                <th>Observation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>224</td>
+                                <td>Fast</td>
+                                <td>Baseline</td>
+                                <td>Stable but limited feature capture</td>
+                            </tr>
+                            <tr>
+                                <td>256</td>
+                                <td>Moderate</td>
+                                <td>Best</td>
+                                <td>Improved representation and generalization</td>
+                            </tr>
+                            <tr>
+                                <td>≥320</td>
+                                <td>Slow</td>
+                                <td>Degraded</td>
+                                <td>Overfitting and instability</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p class="text-muted fst-italic"><strong>Insight:</strong> Increasing resolution from 224 → 256 provided the most significant performance gain.</p>
+
+                    <p class="text-muted mt-4"><strong>Label Smoothing Analysis</strong></p>
+                    <table class="table table-sm table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Model</th>
+                                <th>Label Smoothing</th>
+                                <th>Effect</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Model A</td>
+                                <td>0.05</td>
+                                <td>Improved stability, reduced overconfidence</td>
+                            </tr>
+                            <tr>
+                                <td>Model B</td>
+                                <td>0.03</td>
+                                <td>Balanced stability and prediction sharpness</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p class="text-muted fst-italic"><strong>Insight:</strong> Label smoothing improved generalization but required careful tuning to avoid overly soft predictions.</p>
+
+                    <p class="text-muted mt-4"><strong>Data Augmentation Variations</strong></p>
+                    <table class="table table-sm table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Configuration</th>
+                                <th>Augmentation Strength</th>
+                                <th>Result</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Baseline</td>
+                                <td>Mild</td>
+                                <td>Stable training</td>
+                            </tr>
+                            <tr>
+                                <td>Increased</td>
+                                <td>Moderate</td>
+                                <td>Improved generalization</td>
+                            </tr>
+                            <tr>
+                                <td>Aggressive</td>
+                                <td>High</td>
+                                <td>Degraded performance</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p class="text-muted fst-italic"><strong>Insight:</strong> Medical images require subtle augmentations, as aggressive transformations can distort clinically relevant features.</p>
+
+                    <p class="text-muted mt-4"><strong>Inference Calibration (Temperature Scaling)</strong></p>
+                    <table class="table table-sm table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Model</th>
+                                <th>Temperature</th>
+                                <th>Effect</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Model A</td>
+                                <td>1.5</td>
+                                <td>Smoother predictions, reduced overconfidence</td>
+                            </tr>
+                            <tr>
+                                <td>Model B</td>
+                                <td>1.2</td>
+                                <td>Sharper predictions, better class separation</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p class="text-muted fst-italic"><strong>Insight:</strong> Temperature scaling significantly improved alignment with the asymmetric penalty structure, balancing false positives and false negatives.</p>
+
+                    <h5 id="3-3-model-development-and-comparison" class="mt-4 mb-3">3.3 Model Development and Comparison</h5>
+                    <p class="text-muted">Two primary models were developed through <strong>iterative refinement</strong>.</p>
+
+                    <div class="alert alert-light border" role="alert">
+                        <p class="mb-2"><strong>Model A (Baseline)</strong></p>
+                        <ul class="text-muted mb-0 small">
+                            <li><strong>Image size:</strong> 224</li>
+                            <li><strong>Learning rate:</strong> 8e-5</li>
+                            <li><strong>Label smoothing:</strong> 0.05</li>
+                            <li><strong>Moderate augmentation</strong></li>
+                            <li><strong>Temperature:</strong> 1.5</li>
+                        </ul>
+                        <p class="text-muted mt-2 mb-0">This model established a <strong>stable baseline</strong> with consistent convergence and reasonable performance.</p>
+                    </div>
+
+                    <div class="alert alert-light border" role="alert">
+                        <p class="mb-2"><strong>Model B (Improved Model)</strong></p>
+                        <ul class="text-muted mb-0 small">
+                            <li><strong>Image size:</strong> 256</li>
+                            <li><strong>Learning rate:</strong> 1e-4</li>
+                            <li><strong>Label smoothing:</strong> 0.03</li>
+                            <li><strong>Refined augmentation strategy</strong></li>
+                            <li><strong>Temperature:</strong> 1.2</li>
+                        </ul>
+                        <p class="text-muted mt-2 mb-0">Model B was developed by building upon <strong>Model A</strong> and introducing <strong>targeted improvements</strong> aimed at enhancing <strong>feature representation</strong> and <strong>prediction sharpness</strong>.</p>
+                    </div>
+
+                    <h5 id="3-4-training-dynamics" class="mt-4 mb-3">3.4 Training Dynamics</h5>
+                    <p class="text-muted">The training process revealed important patterns:</p>
+                    <ul class="text-muted">
+                        <li><strong>Training loss decreased steadily</strong>, indicating effective optimization</li>
+                        <li><strong>Validation score plateaued early</strong>, suggesting difficulty in learning rare classes</li>
+                        <li><strong>Improvements in accuracy did not always correspond to improvements in competition score</strong></li>
+                    </ul>
+                    <p class="text-muted">This behavior is explained by:</p>
+                    <ul class="text-muted">
+                        <li>Severe class imbalance</li>
+                        <li>High penalty for false negatives</li>
+                    </ul>
+                    <blockquote class="blockquote border-start ps-4 text-muted">
+                        <p><strong>Key Insight:</strong> Improving accuracy alone is insufficient; optimizing for the competition metric requires careful calibration and sensitivity to minority classes.</p>
+                    </blockquote>
+
+                    <h5 id="3-5-results" class="mt-4 mb-3">3.5 Results</h5>
+                    <p class="text-muted"><strong>Quantitative Comparison</strong></p>
+                    <table class="table table-sm table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Model</th>
+                                <th>Image Size</th>
+                                <th>Learning Rate</th>
+                                <th>Label Smoothing</th>
+                                <th>Validation Score</th>
+                                <th>Kaggle Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Model A</td>
+                                <td>224</td>
+                                <td>8e-5</td>
+                                <td>0.05</td>
+                                <td>~ -5.40</td>
+                                <td>-4.968755</td>
+                            </tr>
+                            <tr>
+                                <td>Model B</td>
+                                <td>256</td>
+                                <td>1e-4</td>
+                                <td>0.03</td>
+                                <td>~ -4.88</td>
+                                <td>-4.94581</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p class="text-muted mt-4"><strong>Performance Metrics</strong></p>
+                    <table class="table table-sm table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Model</th>
+                                <th>Accuracy</th>
+                                <th>Macro F1 Score</th>
+                                <th>Observation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Model A</td>
+                                <td>Moderate</td>
+                                <td>~0.13</td>
+                                <td>Stable but less sensitive to rare classes</td>
+                            </tr>
+                            <tr>
+                                <td>Model B</td>
+                                <td>Higher</td>
+                                <td>~0.135</td>
+                                <td>Improved balance and generalization</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h5 id="3-6-key-observations-and-insights" class="mt-4 mb-3">3.6 Key Observations and Insights</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title"><strong>1. Input Resolution Impact</strong></h6>
+                                    <p class="card-text text-muted small">Increasing image size from 224 to 256 provided the largest improvement in performance, enabling better feature extraction.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title"><strong>2. Calibration is Critical</strong></h6>
+                                    <p class="card-text text-muted small">Temperature scaling had a significant impact on the competition score by improving the balance between false positives and false negatives.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title"><strong>3. Label Smoothing Trade-off</strong></h6>
+                                    <p class="card-text text-muted small">While label smoothing improved stability, reducing it allowed sharper predictions and better performance in later stages.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title"><strong>4. Effect of Class Imbalance</strong></h6>
+                                    <p class="card-text text-muted small">The model showed a natural bias toward dominant classes, highlighting the importance of sampling strategies and calibration.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title"><strong>5. Metric-Specific Optimization</strong></h6>
+                                    <p class="card-text text-muted small">The asymmetric scoring function required focusing on minimizing false negatives rather than maximizing overall accuracy.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title"><strong>6. Validation vs Leaderboard Gap</strong></h6>
+                                    <p class="card-text text-muted small">Differences between validation and Kaggle scores indicate slight distribution mismatch, a common challenge in medical datasets.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-5">
+
+                    <h4 id="4-conclusion" class="mb-4 mt-5">4. Conclusion</h4>
+                    <p class="text-muted">In this work, a <strong>deep learning-based pipeline</strong> was developed for multi-class classification of chest X-ray images across 20 thoracic pathologies. A <strong>ConvNeXt-Tiny architecture</strong> with ImageNet pretraining was employed, and performance was improved through staged fine-tuning, careful hyperparameter tuning, and calibrated inference strategies. The approach incorporated stratified data splitting, controlled data augmentation, and imbalance-aware sampling to ensure stable and representative learning across all classes.</p>
+                    <p class="text-muted">Through systematic experimentation, it was observed that model performance was highly sensitive to <strong>input resolution</strong>, learning rate, and prediction calibration. Increasing image resolution from <strong>224 to 256</strong> yielded the most significant improvement by enhancing feature representation. Additionally, temperature scaling during inference played a critical role in aligning predictions with the asymmetric evaluation metric, improving the balance between <em>false positives</em> and <em>false negatives</em>.</p>
+                    <p class="text-muted">A key insight from this study is that optimizing for standard metrics such as accuracy or F1-score does not necessarily translate to improved performance under domain-specific evaluation criteria. In this case, minimizing <strong>false negatives</strong> was essential due to the higher penalty associated with missed diagnoses. Furthermore, attempts to aggressively address class imbalance using class weighting were found to be unstable, highlighting the importance of calibrated and controlled approaches.</p>
+                    <p class="text-muted">Overall, the results demonstrate that effective performance in medical image classification tasks requires not only strong model architectures but also careful consideration of dataset characteristics, evaluation metrics, and training dynamics. Future improvements could include ensemble methods and more advanced calibration techniques to further enhance robustness and generalization.</p>
+                    <hr class="my-5">
+
+                    <h4 id="5-references" class="mb-4 mt-5">5. References</h4>
+                    <ol class="text-muted">
+                        <li>
+                            <p><strong>Kaggle Competition: Chest X-ray Multi-class Classification Challenge</strong><br>
+                            <a href="https://www.kaggle.com/competitions/26-t-1-dl-gen-ainppe-1/overview" class="link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">https://www.kaggle.com/competitions/26-t-1-dl-gen-ainppe-1/overview</a></p>
+                        </li>
+                        <li>
+                            <p><strong>Dataset Source</strong><br>
+                            <a href="https://www.kaggle.com/competitions/26-t-1-dl-gen-ainppe-1/data" class="link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">https://www.kaggle.com/competitions/26-t-1-dl-gen-ainppe-1/data</a></p>
+                        </li>
+                        <li>
+                            <p><strong>Liu, Z., Mao, H., Wu, C.-Y., Feichtenhofer, C., Darrell, T., &amp; Xie, S. (2022).</strong><br>
+                            <em>A ConvNet for the 2020s (ConvNeXt)</em><br>
+                            <a href="https://arxiv.org/abs/2201.03545" class="link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">https://arxiv.org/abs/2201.03545</a></p>
+                        </li>
+                        <li>
+                            <p><strong>Deng, J., Dong, W., Socher, R., Li, L.-J., Li, K., &amp; Fei-Fei, L. (2009).</strong><br>
+                            <em>ImageNet: A Large-Scale Hierarchical Image Database</em><br>
+                            <a href="https://www.image-net.org/" class="link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">https://www.image-net.org/</a></p>
+                        </li>
+                        <li>
+                            <p><strong>Buslaev, A., Parinov, A., Khvedchenya, E., Iglovikov, V. I., &amp; Kalinin, A. A. (2020).</strong><br>
+                            <em>Albumentations: Fast and Flexible Image Augmentations</em><br>
+                            <a href="https://albumentations.ai/docs/" class="link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">https://albumentations.ai/docs/</a></p>
+                        </li>
+                    </ol>
+                </article>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
