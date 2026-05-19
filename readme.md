@@ -4,7 +4,7 @@ A responsive personal portfolio website showcasing my projects, technical skills
 
 ## Overview
 
-This repository contains the source code for my portfolio website, built to present my software engineering and machine learning projects in a clean, recruiter-friendly format.
+I like it my way minimalistic and to the point
 
 ## Features
 
@@ -24,9 +24,4 @@ This repository contains the source code for my portfolio website, built to pres
 
 [View Portfolio](https://silicontable-aniketpandey.github.io/Portfolio-Website/)
 
-## Run Locally
 
-```bash
-git clone https://github.com/SiliconTable-AniketPandey/Portfolio-Website.git
-cd Portfolio-Website
-```
