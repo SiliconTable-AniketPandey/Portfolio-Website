@@ -138,10 +138,14 @@ h4 {
     border: 1px solid var(--border-color);
     background: var(--secondary-bg);
     color: var(--text-color);
-    width: 58px;
-    height: 58px;
+    width: auto;
+    height: auto;
+    min-height: 42px;
+    padding: 9px 14px;
     border-radius: 14px;
-    font-size: 1.35rem;
+    font-size: .82rem;
+    white-space: nowrap;
+    flex-shrink: 0;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -157,6 +161,15 @@ h4 {
 body.dark-mode .theme-toggle-btn {
     background: #30363d;
     border-color: #484f58;
+}
+
+.project-links { display: inline; }
+.project-links a { white-space: nowrap; }
+.more-projects { margin-left: 32px; }
+:focus-visible { outline: 3px solid var(--link-color); outline-offset: 4px; }
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; }
 }
 
 /* ===== MOBILE ===== */

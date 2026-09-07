@@ -4,11 +4,12 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Aniket Pandey | Portfolio</title>
-        <link rel="stylesheet" href="style.css?v=2">
+        <meta name="description" content="Aniket Pandey’s machine learning and full-stack projects, including Smart MCQ Solver, Heavy Equipment Price Prediction, and EverTrek.">
+        <link rel="stylesheet" href="style.css?v=3">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
 
     </head>
-    <body>
+    <body class="dark-mode">
 
         <div class="container">
             <div class="portfolio-container">
@@ -17,7 +18,7 @@
                 <header class="mb-4">
                         <div class="d-flex justify-content-between">
                             <h2>Aniket Pandey</h2>
-                            <button id="theme-toggle" class="theme-toggle-btn">🌙</button>
+                            <button id="theme-toggle" class="theme-toggle-btn">Light theme</button>
                         </div>
                     <p class="text-muted mb-2">ML Engineer</p>
 
@@ -31,9 +32,24 @@
                 </header>
 
                 <!-- Featured Projects -->
-                <section class="mb-5">
+                <section class="mb-5" id="projects">
                     <h4>Featured Projects</h4>
                     <ul class="project-list fst-italic mt-3">
+                        <li>
+                            <a href="https://github.com/SiliconTable-AniketPandey/Smart-MCQ-Solver" target="_blank" rel="noopener noreferrer">Smart MCQ Solver</a>
+                            <span>Built an answer-ranking pipeline using <span class="highlight">BiGRU</span>, <span class="highlight">DeBERTa</span>, and <span class="highlight">canonical lookup with TF-IDF retrieval</span>, ranking <span class="highlight">31 out of 1,530 participants (Top 2.1%)</span>. Deployed an interactive solver with <span class="highlight">Gradio on Hugging Face</span>.</span>
+                            <span class="project-links"><a href="smart-mcq-solver.html">[Technical Report]</a> <a href="https://huggingface.co/spaces/BruceWayneWhere/Smart-MCQ-Solver-May-2026" target="_blank" rel="noopener noreferrer">[Live Demo]</a> <a href="https://www.kaggle.com/code/brucewaynewhere/dl-23f2003176-notebook-t22026" target="_blank" rel="noopener noreferrer">[Kaggle Notebook]</a></span>
+                        </li>
+                        <li>
+                            <a href="https://github.com/SiliconTable-AniketPandey/Heavy-Equipment-Selling-Price-Prediction-Challenge-Kaggle-2026" target="_blank" rel="noopener noreferrer">Heavy Equipment Selling Price Prediction</a>
+                            <span>Predicted machinery selling prices with <span class="highlight">CatBoost, XGBoost, and LightGBM</span>, combining <span class="highlight">machine age and usage features</span>, <span class="highlight">five-fold validation</span>, and a <span class="highlight">positive linear ensemble</span>. Ranked <span class="highlight">99 out of 2,593 participants (Top 3.9%)</span> with a <span class="highlight">0.18778 RMSLE</span> score.</span>
+                            <span class="project-links"><a href="https://www.kaggle.com/code/brucewaynewhere/23f2003176-notebook-2026t2" target="_blank" rel="noopener noreferrer">[Kaggle Notebook]</a></span>
+                        </li>
+                        <li>
+                            <a href="https://github.com/SiliconTable-AniketPandey/EverTrek/" target="_blank" rel="noopener noreferrer">EverTrek</a>
+                            <span>Built a <span class="highlight">role-based trekking management platform</span> with <span class="highlight">Vue.js, Flask, and SQLite</span>. Includes trek discovery, bookings, staff assignments, and operational dashboards, with <span class="highlight">Redis caching</span> and <span class="highlight">Celery background emails, reminders, and exports</span>.</span>
+                            <span class="project-links"><a href="evertrek.html">[Technical Report]</a> <a href="evertrek.html#walkthrough">[Project Demos]</a></span>
+                        </li>
                         <li>
                             <a href="https://github.com/SiliconTable-AniketPandey/Chest-X-ray-imaging-Multiclass-Classification-NPPE1" target="_blank">Chest X-ray Imaging</a>
                             <span>
@@ -62,7 +78,7 @@
                             </span>
                         </li>
                     </ul>
-                    <ul><a href="https://github.com/SiliconTable-AniketPandey?tab=repositories">More...</a></ul>
+                    <p class="more-projects"><a href="https://github.com/SiliconTable-AniketPandey?tab=repositories">More projects...</a></p>
                 </section>
 
                 <!-- Tech Stack -->
@@ -100,6 +116,6 @@
 
             </div>
         </div>
-        <script src="script.js?v=2"></script>
+        <script src="script.js?v=3"></script>
     </body>
 </html>

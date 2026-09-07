@@ -1,20 +1,18 @@
-const toggleBtn = document.getElementById("theme-toggle");
-
-if (localStorage.getItem("theme") !== "light") {
-  document.body.classList.add("dark-mode");
-  toggleBtn.textContent = "☀️";
-} else {
-  toggleBtn.textContent = "🌙";
-}
-
-toggleBtn.addEventListener("click", () => {
-  document.body.classList.toggle("dark-mode");
-
-  if (document.body.classList.contains("dark-mode")) {
-    localStorage.setItem("theme", "dark");
-    toggleBtn.textContent = "☀️";
-  } else {
-    localStorage.setItem("theme", "light");
-    toggleBtn.textContent = "🌙";
-  }
-});
+﻿(() => {
+  const toggle = document.getElementById('theme-toggle');
+  let theme = 'dark';
+  try { theme = localStorage.getItem('theme') || 'dark'; } catch (_) {}
+  const applyTheme = () => {
+    document.body.classList.toggle('dark-mode', theme !== 'light');
+    if (toggle) {
+      toggle.textContent = theme === 'light' ? 'Dark theme' : 'Light theme';
+      toggle.setAttribute('aria-label', `Switch to ${theme === 'light' ? 'dark' : 'light'} theme`);
+    }
+  };
+  applyTheme();
+  toggle?.addEventListener('click', () => {
+    theme = theme === 'light' ? 'dark' : 'light';
+    try { localStorage.setItem('theme', theme); } catch (_) {}
+    applyTheme();
+  });
+})();
